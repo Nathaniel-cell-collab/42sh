@@ -1,0 +1,78 @@
+name: mysh
+
+on:
+  push:
+    branches-ignore:
+      - "main"
+  pull_request:
+
+env:
+  EXECUTABLES: mysh
+
+jobs:
+  check_coding_style:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/epitech/coding-style-checker:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run coding style checker
+        run: check.sh $(pwd) $(pwd)
+      - name: Check for coding style report
+        run: ls -l coding-style-reports.log || echo "No report found"
+      - name: Annotate coding style errors
+        shell: bash
+        run: |
+          if [ -s coding-style-reports.log ]; then
+            echo "Coding style error detected."
+            while read -r line; do
+              file=$(echo "$line" | cut -d: -f1)
+              line_index=$(echo "$line" | cut -d: -f2)
+              err_type=$(echo "$line" | cut -d: -f4)
+              echo "::error file=$file,line=$line_index::Error type: $err_type"
+            done <coding-style-reports.log
+            exit 1
+          fi
+
+  check_program_compilation:
+    needs: check_coding_style
+    if: success()
+    runs-on: ubuntu-latest
+    container:
+      image: epitechcontent/epitest-docker
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build program
+        timeout-minutes: 2
+        run: make
+      - name: Clean repository
+        run: make clean
+      - name: Check executables
+        shell: bash
+        run: |
+          IFS=',' read -ra ARRAY <<< "${{ env.EXECUTABLES }}"
+          for element in "${ARRAY[@]}"; do
+            if [[ -f "$element" && -x "$element" ]]; then
+              echo "Compilation succeeded: executable '$element' exists and is executable."
+            else
+              echo "::error file=Makefile::No executable '$element': it does not exist or is not executable. Check your Makefile."
+              exit 1
+            fi
+          done
+
+  run_tests:
+    needs: check_program_compilation
+    if: success()
+    runs-on: ubuntu-latest
+    container:
+      image: epitechcontent/epitest-docker
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        timeout-minutes: 2
+        run: |
+          if [[ -d tests ]]; then
+            make tests_run
+          else
+            echo "No 'tests' directory found. Skipping tests."
+          fi

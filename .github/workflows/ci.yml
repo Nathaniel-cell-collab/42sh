@@ -1,0 +1,97 @@
+name: CI/CD Full Auto for 42sh
+
+permissions:
+  contents: write
+on:
+  push:
+    branches: [ main ]
+
+env:
+  EXECUTABLES: 42sh
+
+jobs:
+  check_coding_style:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/epitech/coding-style-checker:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run coding style checker
+        run: check.sh $(pwd) $(pwd)
+      - name: Check for coding style report
+        run: ls -l coding-style-reports.log || echo "No report found"
+      - name: Annotate coding style errors
+        shell: bash
+        run: |
+          if [ -s coding-style-reports.log ]; then
+            echo "Coding style error detected."
+            while read -r line; do
+              file=$(echo "$line" | cut -d: -f1)
+              line_index=$(echo "$line" | cut -d: -f2)
+              err_type=$(echo "$line" | cut -d: -f4)
+              echo "::error file=$file,line=$line_index::Error type: $err_type"
+            done <coding-style-reports.log
+            exit 1
+          fi
+
+  check_program_compilation:
+    needs: check_coding_style
+    if: success()
+    runs-on: ubuntu-latest
+    container:
+      image: epitechcontent/epitest-docker
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build program
+        timeout-minutes: 2
+        run: make
+      - name: Clean repository
+        run: make clean
+      - name: Check executables
+        shell: bash
+        run: |
+          IFS=',' read -ra ARRAY <<< "${{ env.EXECUTABLES }}"
+          for element in "${ARRAY[@]}"; do
+            if [[ -f "$element" && -x "$element" ]]; then
+              echo "Compilation succeeded: executable '$element' exists and is executable."
+            else
+              echo "::error file=Makefile::No executable '$element': it does not exist or is not executable. Check your Makefile."
+              exit 1
+            fi
+          done
+
+  build-and-release:
+    needs: check_program_compilation
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+      - name: Compile the project
+        run: make
+      - name: Generate unique tag and push it
+        id: generate_tag
+        run: |
+          DATE=$(date +'%Y.%m.%d')
+          i=1
+          while git ls-remote --tags origin | grep -q "refs/tags/v${DATE}.${i}"; do
+            i=$((i + 1))
+          done
+          NEW_TAG="v${DATE}.${i}"
+          echo "✅ Tag disponible : $NEW_TAG"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag "$NEW_TAG"
+          git push origin "$NEW_TAG"
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+      - name: Create GitHub Release and attach binary
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.generate_tag.outputs.tag }}
+          name: "42sh ${{ steps.generate_tag.outputs.tag }}"
+          body: "Release automatically created on push to main."
+          files: ./42sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
