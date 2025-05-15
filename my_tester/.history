@@ -1,0 +1,69 @@
+m
+echo Hello, World!; echo Hello, World!
+echo Hello | wc -l
+echo Hello; echo World | wc -w
+echo Hello, World! > output.txt; cat output.txt
+echo Hello, World! > output.txt; echo Hello again! >> output.txt; cat output.txt
+cat < input.txt
+Vincent jtm
+echo Hello, World! | cat > output.txt; cat output.txt
+2>&1
+|
+ls |
+ls >
+ls > ../testfile ../file
+ls /bin/?s
+ls ../src/*.c
+ls [a-z]*
+echo Hello, World!; echo Hello, World!
+echo Hello | wc -l
+echo Hello; echo World | wc -w
+echo Hello, World! > output.txt; cat output.txt
+echo Hello, World! > output.txt; echo Hello again! >> output.txt; cat output.txt
+cat < input.txt
+Vincent jtm
+echo Hello, World! | cat > output.txt; cat output.txt
+2>&1
+|
+ls |
+ls >
+ls > ../testfile ../file
+ls /bin/?s
+ls ../src/*.c
+ls [a-z]*
+echo Hello, World!; echo Hello, World!
+echo Hello | wc -l
+echo Hello; echo World | wc -w
+echo Hello, World! > output.txt; cat output.txt
+echo Hello, World! > output.txt; echo Hello again! >> output.txt; cat output.txt
+cat < input.txt
+Vincent jtm
+echo Hello, World! | cat > output.txt; cat output.txt
+2>&1
+|
+ls |
+ls >
+ls > ../testfile ../file
+ls /bin/?s
+ls ../src/*.c
+ls [a-z]*
+echo 'Hello World !'
+echo Hello, World!; echo Hello, World!
+echo Hello | wc -l
+echo Hello; echo World | wc -w
+echo Hello, World! > output.txt; cat output.txt
+echo Hello, World! > output.txt; echo Hello again! >> output.txt; cat output.txt
+cat < input.txt
+Vincent jtm
+echo Hello, World! | cat > output.txt; cat output.txt
+2>&1
+|
+ls |
+ls >
+ls > ../testfile ../file
+ls /bin/as /bin/gs /bin/js /bin/ls /bin/ps /bin/ss
+ls ../src/main.c
+ls input.txt output.txt test_mysh.sh
+echo 'Hello World !'
+which ls
+where ls
